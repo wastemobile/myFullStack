@@ -22,7 +22,10 @@ Engine selection criteria (active users, data volume, deploy topology) are docum
 
 ## For AI Agents
 
-If you are an AI coding agent and you've been pointed at this repository, **read [`AGENTS.md`](./AGENTS.md) first**. It is the canonical rule set.
+If you are an AI coding agent and you've been pointed at this repository:
+
+1. **Read [`AGENTS.md`](./AGENTS.md) first** — the canonical rule set (permission workflow, code style, stack-specific rules).
+2. **Then [`KNOWLEDGE.md`](./KNOWLEDGE.md)** — curated list of *official* AI / MCP / agent entry points for every major piece of the stack (Svelte, Astro, Prisma, Playwright, Redis, Docker, ...). Use it to wire up MCP servers and skills, not to chase third-party plugins.
 
 Tool-specific entry points all resolve to the same content:
 
@@ -43,6 +46,7 @@ Tool-specific entry points all resolve to the same content:
 ```
 .
 ├── AGENTS.md              # Canonical rules — start here
+├── KNOWLEDGE.md           # Official AI/MCP entry points for stack components
 ├── CLAUDE.md              # Claude Code entry point (includes AGENTS.md)
 ├── README.md              # This file
 └── .claude/               # Claude Code-specific extras (optional for other agents)
@@ -73,9 +77,10 @@ TMP_DIR="$(mktemp -d)"
 
 git clone --depth 1 git@github.com:wastemobile/myFullStack.git "$TMP_DIR/fullStack"
 
-cp "$TMP_DIR/fullStack/AGENTS.md"  "$PROJECT_DIR/AGENTS.md"
-cp "$TMP_DIR/fullStack/CLAUDE.md"  "$PROJECT_DIR/CLAUDE.md"
-cp -r "$TMP_DIR/fullStack/.claude" "$PROJECT_DIR/.claude"
+cp "$TMP_DIR/fullStack/AGENTS.md"    "$PROJECT_DIR/AGENTS.md"
+cp "$TMP_DIR/fullStack/KNOWLEDGE.md" "$PROJECT_DIR/KNOWLEDGE.md"
+cp "$TMP_DIR/fullStack/CLAUDE.md"    "$PROJECT_DIR/CLAUDE.md"
+cp -r "$TMP_DIR/fullStack/.claude"   "$PROJECT_DIR/.claude"
 
 rm -rf "$TMP_DIR"
 ```
@@ -83,7 +88,7 @@ rm -rf "$TMP_DIR"
 Then commit:
 
 ```bash
-git add AGENTS.md CLAUDE.md .claude/
+git add AGENTS.md KNOWLEDGE.md CLAUDE.md .claude/
 git commit -m "chore: adopt Full Stack HQ agent rules"
 ```
 
@@ -103,11 +108,12 @@ Open a new agent session and ask it to **summarize the rules in three bullet poi
 
 ## Customizing
 
-- **Different stack?** Edit `AGENTS.md` §3 (Tech Stack) and §4 (Code Style). All agents will pick up the change on next session.
+- **Different stack?** Edit `AGENTS.md` §3 (Tech Stack) and §4 (Code Style), then refresh `KNOWLEDGE.md` with the new components' official AI entry points.
 - **Want more or fewer subagents?** Add/remove files in `.claude/agents/`. The `AGENTS.md` §2 table should reflect what exists.
 - **Want more slash commands?** Add files in `.claude/commands/`. Update `AGENTS.md` §9.
+- **New official MCP / Skill / Subagent appears upstream?** Add it to `KNOWLEDGE.md` and bump the "Last verified" date.
 
-Keep one source of truth: `AGENTS.md`.
+Keep one source of truth: `AGENTS.md` for rules, `KNOWLEDGE.md` for external AI integrations.
 
 ---
 
