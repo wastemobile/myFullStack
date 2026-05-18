@@ -27,7 +27,45 @@
   - Instructions: <https://svelte.dev/docs/ai/instructions>
   - Skills: <https://svelte.dev/docs/ai/skills>
   - Subagents: <https://svelte.dev/docs/ai/subagent>
+  - Claude Code plugin: <https://svelte.dev/docs/ai/claude-plugin>
 - **Why it matters**: best-in-class — Svelte ships every layer (MCP for live docs, Skills for best practices, Subagents for parallel atomic ops).
+
+#### Pre-configured in this repo
+
+`.mcp.json` at the repo root already declares the remote Svelte MCP server. Claude Code picks it up automatically on first session in this directory — no command needed. Other agents need their own equivalent (below).
+
+#### Install options (if you need to configure manually)
+
+**Remote MCP (HTTP)** — recommended baseline, what `.mcp.json` uses:
+```bash
+# Claude Code
+claude mcp add -t http -s project svelte https://mcp.svelte.dev/mcp
+```
+
+**Local MCP (stdio)** — runs the server as a local Node process; works offline:
+```bash
+# Claude Code
+claude mcp add -t stdio -s project svelte -- npx -y @sveltejs/mcp
+```
+
+**Claude Code plugin** — richest path: MCP server + Skills + a dedicated Svelte editing subagent in one install. Recommended if you're authoring Svelte heavily:
+```
+/plugin marketplace add sveltejs/ai-tools
+/plugin install svelte
+```
+(Per-user action; cannot be committed to the repo.)
+
+#### Equivalent for other agents
+
+Most MCP-aware agents accept the same HTTP endpoint via their own config:
+
+| Agent | How to add |
+|---|---|
+| OpenAI Codex CLI | Add to Codex MCP config: `{ "svelte": { "url": "https://mcp.svelte.dev/mcp" } }` |
+| OpenCode (sst) | Add to `opencode.json` under `mcp.servers` with `type: "http"`, same URL |
+| Hermes Agent | Same pattern — point its MCP config at `https://mcp.svelte.dev/mcp` |
+
+For the local stdio variant, swap the URL for a command spawning `npx -y @sveltejs/mcp` in the agent's config syntax.
 
 ### Astro 5
 

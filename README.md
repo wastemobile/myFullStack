@@ -48,6 +48,7 @@ Tool-specific entry points all resolve to the same content:
 ├── AGENTS.md              # Canonical rules — start here
 ├── KNOWLEDGE.md           # Official AI/MCP entry points for stack components
 ├── CLAUDE.md              # Claude Code entry point (includes AGENTS.md)
+├── .mcp.json              # Project-scoped MCP servers (auto-loaded by Claude Code)
 ├── README.md              # This file
 └── .claude/               # Claude Code-specific extras (optional for other agents)
     ├── agents/            # Subagent definitions
@@ -80,6 +81,7 @@ git clone --depth 1 git@github.com:wastemobile/myFullStack.git "$TMP_DIR/fullSta
 cp "$TMP_DIR/fullStack/AGENTS.md"    "$PROJECT_DIR/AGENTS.md"
 cp "$TMP_DIR/fullStack/KNOWLEDGE.md" "$PROJECT_DIR/KNOWLEDGE.md"
 cp "$TMP_DIR/fullStack/CLAUDE.md"    "$PROJECT_DIR/CLAUDE.md"
+cp "$TMP_DIR/fullStack/.mcp.json"    "$PROJECT_DIR/.mcp.json"
 cp -r "$TMP_DIR/fullStack/.claude"   "$PROJECT_DIR/.claude"
 
 rm -rf "$TMP_DIR"
@@ -88,7 +90,7 @@ rm -rf "$TMP_DIR"
 Then commit:
 
 ```bash
-git add AGENTS.md KNOWLEDGE.md CLAUDE.md .claude/
+git add AGENTS.md KNOWLEDGE.md CLAUDE.md .mcp.json .claude/
 git commit -m "chore: adopt Full Stack HQ agent rules"
 ```
 
@@ -103,6 +105,16 @@ git commit -m "chore: adopt Full Stack HQ agent rules"
 ### Verify
 
 Open a new agent session and ask it to **summarize the rules in three bullet points**. A correctly configured agent should mention permission-first workflow, the Astro/Svelte/SQLite stack, and approval keywords (`PLAN APPROVED`, `IMPLEMENTATION APPROVED`, `PROCEED`, `DO IT`).
+
+For Claude Code, also check the MCP server loaded:
+
+```
+/mcp
+```
+
+You should see `svelte` connected to `https://mcp.svelte.dev/mcp`. Approve the prompt to trust the project-scoped server on first run.
+
+For agents other than Claude Code (Codex, OpenCode, Hermes), see [`KNOWLEDGE.md`](./KNOWLEDGE.md#equivalent-for-other-agents) for the equivalent MCP install command in their config format.
 
 ---
 
