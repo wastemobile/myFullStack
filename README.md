@@ -46,26 +46,23 @@ Tool-specific entry points all resolve to the same content:
 
 ```
 .
-├── AGENTS.md              # Canonical rules — start here
+├── AGENTS.md              # Canonical tech-stack & style preferences — start here
 ├── KNOWLEDGE.md           # Official AI/MCP entry points for stack components
 ├── skills/                # Operational know-how (TS, Tailwind, Prisma, Docker, ...)
 ├── CLAUDE.md              # Claude Code entry point (includes AGENTS.md)
 ├── .mcp.json              # Project-scoped MCP servers (auto-loaded by Claude Code)
 ├── README.md              # This file
 └── .claude/               # Claude Code-specific extras (optional for other agents)
-    ├── agents/            # Subagent definitions
-    │   ├── frontend-specialist.md
-    │   ├── backend-specialist.md
-    │   ├── database-specialist.md
-    │   └── code-reviewer.md
-    └── commands/          # Slash command workflows
-        ├── plan.md
-        ├── create.md
-        ├── debug.md
-        └── test.md
+    └── agents/            # Subagent definitions
+        ├── frontend-specialist.md
+        ├── backend-specialist.md
+        ├── database-specialist.md
+        └── code-reviewer.md
 ```
 
-`.claude/agents/` and `.claude/commands/` are Claude Code conventions. Agents that don't recognize them can still follow the playbooks inside — each file is plain Markdown describing the role or workflow.
+`.claude/agents/` is a Claude Code convention. Other agents can read these files as plain-Markdown role descriptions.
+
+**Workflows are not bundled.** Planning, debugging, testing, etc. come from each agent's own commands (e.g. Claude Code's built-in `/plan`) or from skills installed separately. This repo only describes *what* stack and conventions to use — not *how* to drive your workflow.
 
 ---
 
@@ -123,25 +120,31 @@ For agents other than Claude Code (Codex, OpenCode, Hermes), see [`KNOWLEDGE.md`
 
 ## Personal Local Shortcut (author's setup, not shipped)
 
-The author keeps a `/use-mystack` slash command that wraps `rsync` to drop this repo's rules into any new project directory. **Not part of this repo** — the script and templates live in `$HOME`. To replicate:
+The author keeps a `/use-mystack` Claude Code skill that installs this repo's contents into any project. **Not part of this repo** — the skill and the template both live in `$HOME`. To replicate:
 
 ```bash
-# 1. Templates dir (clean copy of this repo)
+# 1. Template directory (clean copy of this repo, no .git / README / local state)
 mkdir -p ~/.claude/templates/fullStack
 rsync -a --delete \
   --exclude='README.md' --exclude='.git/' --exclude='.claude/settings.local.json' \
-  ~/projects/fullStack/ ~/.claude/templates/fullStack/
+  ~/projects/myFullStack/ ~/.claude/templates/fullStack/
 
-# 2. ~/.local/bin/use-mystack — rsyncs templates into $PWD,
-#    skip-existing by default; supports --force / --dry-run / --only=...
-
-# 3. Thin wrappers per agent, each just calling `use-mystack`:
-#    Claude Code → ~/.claude/commands/use-mystack.md
-#    Codex CLI   → ~/.codex/prompts/use-mystack.md
-#    OpenCode    → ~/.config/opencode/command/use-mystack.md
+# 2. Skill at ~/.claude/commands/use-mystack.md that orchestrates the install.
+#    All logic lives in the skill — no shell wrapper. It reads the template,
+#    detects existing files in $PWD, and either copies fresh or smart-merges:
+#      - AGENTS.md (existing) → appends a delimited stack-preferences block
+#      - CLAUDE.md (existing) → ensures @AGENTS.md is referenced
+#      - skills/, agents/, .mcp.json → rsync --ignore-existing
 ```
 
-**Re-sync after every `git pull` of this repo** — re-run step 1's `rsync`. The `--delete` flag is mandatory: without it, files removed from the repo would linger in the local templates and keep getting installed into new projects. The shell script itself rarely changes; redeploy only when its behavior is intentionally updated.
+Run `/use-mystack` in any project — empty or existing. The append uses a
+`<!-- BEGIN: full-stack-hq stack preferences -->` marker so re-running is a
+no-op (idempotent). Pass `--refresh` to update the marked section, `--dry-run`
+to preview.
+
+**Re-sync after `git pull` of this repo** — re-run step 1's `rsync`. The
+`--delete` flag is mandatory: without it, files removed upstream would linger
+in the local template and keep getting installed into new projects.
 
 ---
 
@@ -159,12 +162,12 @@ After bootstrap above, the config files are present but **nothing is scaffolded 
 
 3. The agent should respond with the `[Session Start Check]` block, then a scaffolding plan. Review, adjust, and reply `PLAN APPROVED` when satisfied — only then does it run init commands.
 
-4. From this point on, every feature follows the same loop: describe → `[Session Start Check]` (if it's a fresh session) → `/plan` → `PLAN APPROVED` → `/create` → review. Single-file edits ≤ 30 lines can skip `/plan` and use `IMPLEMENTATION APPROVED` directly (see AGENTS.md §1 Plan-Gate Rule).
+4. From this point on, every feature follows the same loop: describe → `[Session Start Check]` (if it's a fresh session) → planning step (use your agent's own `/plan` command or skill, or just propose a plan conversationally) → `PLAN APPROVED` → implementation → review. Single-file edits ≤ 30 lines can go straight to `IMPLEMENTATION APPROVED`.
 
 ### Why this works
 
 - **AGENTS.md §0** forces the agent to declare its understanding before acting — catches stack-mismatch and skipped-skill problems early.
-- **AGENTS.md §1 Plan-Gate Rule** prevents the agent from leaping into multi-file scaffolding off a one-line request.
+- **AGENTS.md §1 Permission-First** prevents the agent from leaping into multi-file scaffolding off a one-line request without an explicit approval keyword.
 - **`.mcp.json`** auto-connects Svelte/Astro live docs so the agent isn't guessing from training memory.
 
 If the agent skips the Session Start Check or starts writing without `PLAN APPROVED`, that's a regression — re-prompt with: *"Please follow AGENTS.md §0 and §1 strictly."*
@@ -175,8 +178,8 @@ If the agent skips the Session Start Check or starts writing without `PLAN APPRO
 
 - **Different stack?** Edit `AGENTS.md` §3 (Tech Stack) and §4 (Code Style), then refresh `KNOWLEDGE.md` with the new components' official AI entry points and replace/remove affected files in `skills/`.
 - **Want more or fewer subagents?** Add/remove files in `.claude/agents/`. The `AGENTS.md` §2 table should reflect what exists.
-- **Want more slash commands?** Add files in `.claude/commands/`. Update `AGENTS.md` §9.
-- **Need a new operational skill?** Add a file to `skills/` with the YAML frontmatter (`name`, `description`) and list it in `AGENTS.md` §13.
+- **Need a new operational skill?** Add a file to `skills/` with the YAML frontmatter (`name`, `description`) and list it in `AGENTS.md` §11.
+- **Want slash commands or workflow automation?** Install them via your agent's own mechanism (Claude Code skills/commands, Codex prompts, etc.) — this repo deliberately stays workflow-agnostic so the same rules ship to every agent.
 - **New official MCP / Skill / Subagent appears upstream?** Add it to `KNOWLEDGE.md` and bump the "Last verified" date.
 
 Sources of truth:

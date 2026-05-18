@@ -1,7 +1,9 @@
 # Full Stack HQ — Agent Rules
 
-> Canonical rules for any AI coding agent working in this project.
-> Optimized for: Astro · Svelte 5 · NestJS · TypeScript · Prisma · Tailwind CSS
+> **Tech-stack & style preferences** for any AI coding agent working in this project.
+> Workflows (planning, implementing, debugging, testing) come from the calling tool's own commands or from [`skills/`](./skills/) — this file tells those workflows *what* stack and conventions to follow.
+>
+> Stack: Astro · Svelte 5 · NestJS · TypeScript · Prisma · Tailwind CSS
 >
 > **Recognized by**: Claude Code (via `CLAUDE.md` → `@AGENTS.md`), OpenAI Codex, OpenCode, Hermes Agent, and any tool that follows the [agents.md](https://agents.md) convention.
 
@@ -9,32 +11,26 @@
 
 ## 0. Session Start Protocol
 
-**Before responding to the user's first substantive message in any session, output a Session Start Check.** This is not optional — it is the first thing the user sees from you.
-
-Format:
+Before responding to the user's first substantive message in any session, output a brief Session Start Check:
 
 ```
 [Session Start Check]
-- Stack baseline: <one-line summary from §3 — Astro 5 + Svelte 5 + NestJS + Prisma/SQLite-or-PG + Caddy>
-- Relevant skills/: <comma-separated list from skills/ matching the user's request, or "none" if a pure question>
-- MCP loaded: <names from .mcp.json — e.g. svelte, astro-docs — or "none configured">
-- Phase: discovery | implementation | review
+- Stack baseline: Astro 5 + Svelte 5 + NestJS + Prisma/SQLite-or-PG + Caddy
+- Relevant skills/: <comma-separated list from skills/ matching the request, or "none">
+- MCP loaded: <names from .mcp.json — e.g. svelte, astro-docs — or "none">
 ```
 
-After the check:
-- If the user's request implies file creation or > 30-line edits, **stop and ask for `PLAN APPROVED`**. Do not write code yet.
-- If it's a pure question / read-only inspection / micro-edit (single file ≤ 30 lines), proceed normally.
-- If the user's described stack differs from the baseline (e.g. "I want to use Next.js"), surface the conflict and ask before deviating — do not silently switch.
+If the user's described stack differs from the baseline (e.g. "I want to use Next.js"), surface the conflict before deviating — don't silently switch.
 
-**Skip the check only if:** the very first user message is a trivial follow-up that obviously continues a prior conversation (e.g. "thanks", "go ahead with step 2"). When in doubt, run the check.
+**Skip the check only if:** the first user message is a trivial follow-up that obviously continues a prior conversation (e.g. "thanks", "go ahead with step 2"). When in doubt, run the check.
 
 ---
 
 ## 1. Core Principles
 
-### Permission-First Workflow
+### Permission-First
 
-You are an amplifier, not an autopilot. Every action requires explicit approval.
+You are an amplifier, not an autopilot. Sensitive actions require explicit approval.
 
 **NEVER without approval:**
 - Execute shell commands
@@ -55,34 +51,15 @@ DO IT
 Any variation, implication, or partial approval = **NOT approved**.
 When in doubt: *"Please confirm with PLAN APPROVED to proceed."*
 
-### Plan-Gate Rule
-
-Any task that **creates a new file** or **modifies more than 30 lines in a single existing file** requires an approved `/plan` (or equivalent plan-and-approval exchange) **in the same session** before `/create` or any write tool runs.
-
-**Bypass exception (micro-edit):** a single-file edit of ≤ 30 lines may proceed directly with `IMPLEMENTATION APPROVED` — no separate `/plan` needed. Multi-file changes never qualify for the bypass, regardless of total line count.
-
-If the user types `/create` (or describes implementation work) without a prior `/plan` in this session and the bypass does not apply:
-- Refuse to write
-- Reply: *"No approved plan in this session. Please run `/plan` first, or confirm this is a single-file ≤ 30-line edit eligible for `IMPLEMENTATION APPROVED`."*
-
-This rule exists to catch the failure mode where the agent jumps from a one-line user request straight into multi-file scaffolding without surfacing assumptions.
-
 ### Thinking-First Engineering
 
-Before writing a single line of code:
+Before writing code:
 1. **Who** is the right specialist for this task?
 2. **What** is the minimal, reversible change?
 3. **How** does this fit the existing architecture?
 4. **Why** is this the best approach?
 
 Present your reasoning. Wait for approval. Then execute.
-
-### Plan Mode Usage
-
-For any task involving more than 2 files or 30 minutes of work:
-- Enter Plan Mode automatically
-- Break into phases with explicit `[APPROVAL NEEDED]` checkpoints
-- Each phase must be independently reversible
 
 ---
 
@@ -299,6 +276,8 @@ hotfix/<slug>  → urgent production fixes (branch from main)
 
 ## 6. Testing
 
+Testing tools and writing style every role should follow.
+
 ### Frontend (Vitest + @testing-library/svelte)
 
 ```typescript
@@ -370,54 +349,16 @@ console.log('User password:', password)                   // log sensitive data
 
 ---
 
-## 8. Error Handling Protocol
+## 8. Memory & Context
 
-When you encounter an error:
-
-1. **Report** — What exactly failed?
-2. **Analyze** — Root cause, not surface symptom
-3. **Impact** — What does this break?
-4. **Options** — 2-3 solution paths with trade-offs
-5. **Wait** — Which approach should I take?
-
-**Never auto-fix. Always get approval first.**
-
----
-
-## 9. Workflow Commands (Claude Code)
-
-These slash commands are defined in `.claude/commands/` and are Claude Code-specific. Other agents may invoke the underlying workflow manually by following the playbook each file describes.
-
-| Command | When to Use |
-|---------|-------------|
-| `/plan` | Before starting any feature |
-| `/create` | Implementing approved plan |
-| `/debug` | Stuck on a bug |
-| `/test` | Writing or fixing tests |
-
-**`/plan` → `/create` is enforced** by the Plan-Gate Rule in §1. `/create` will refuse to run unless either (a) a prior `/plan` in this session was approved, or (b) the change qualifies as a single-file ≤ 30-line micro-edit.
-
----
-
-## 10. Memory & Context
-
-### What to Track in TodoWrite
-
-For every multi-step task, maintain a todo list:
-- Current phase and status
-- Completed items (with ✅)
-- Blocked items (with reason)
-- Next action required
-
-### Context Hygiene
-
-- If a conversation exceeds 15 turns without a clear outcome → suggest `/compact` or new session
+- For multi-step tasks, maintain visible progress using whatever todo/task mechanism your runtime provides
+- If a conversation exceeds 15 turns without a clear outcome → suggest compacting or starting a new session
 - If requirements shift mid-implementation → stop, re-plan, get approval
 - If context becomes contradictory → ask for clarification, don't assume
 
 ---
 
-## 11. Forbidden Patterns (All Languages)
+## 9. Forbidden Patterns (All Languages)
 
 ```
 ❌ any type in TypeScript
@@ -437,7 +378,7 @@ For every multi-step task, maintain a todo list:
 
 ---
 
-## 12. Quick Reference
+## 10. Quick Reference
 
 | Action | Policy |
 |--------|--------|
@@ -455,7 +396,7 @@ For every multi-step task, maintain a todo list:
 
 ---
 
-## 13. Operational Skills
+## 11. Operational Skills
 
 Concrete, copy-paste-ready operational knowledge for each major tool/library lives in [`skills/`](./skills/). **Read the relevant file before starting work in that domain** — these are the agreed baseline so different agents (and different model tiers) produce consistent output.
 
