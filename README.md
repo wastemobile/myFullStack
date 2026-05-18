@@ -26,6 +26,7 @@ If you are an AI coding agent and you've been pointed at this repository:
 
 1. **Read [`AGENTS.md`](./AGENTS.md) first** — the canonical rule set (permission workflow, code style, stack-specific rules).
 2. **Then [`KNOWLEDGE.md`](./KNOWLEDGE.md)** — curated list of *official* AI / MCP / agent entry points for every major piece of the stack (Svelte, Astro, Prisma, Playwright, Redis, Docker, ...). Use it to wire up MCP servers and skills, not to chase third-party plugins.
+3. **Then [`skills/`](./skills/)** — concrete operational know-how for tools without (or before reaching for) official MCP: TypeScript patterns, Tailwind, Prisma workflow, Docker, git commands, NestJS scaffolding. Designed to give different agents and different model tiers a shared baseline.
 
 Tool-specific entry points all resolve to the same content:
 
@@ -47,6 +48,7 @@ Tool-specific entry points all resolve to the same content:
 .
 ├── AGENTS.md              # Canonical rules — start here
 ├── KNOWLEDGE.md           # Official AI/MCP entry points for stack components
+├── skills/                # Operational know-how (TS, Tailwind, Prisma, Docker, ...)
 ├── CLAUDE.md              # Claude Code entry point (includes AGENTS.md)
 ├── .mcp.json              # Project-scoped MCP servers (auto-loaded by Claude Code)
 ├── README.md              # This file
@@ -82,6 +84,7 @@ cp "$TMP_DIR/fullStack/AGENTS.md"    "$PROJECT_DIR/AGENTS.md"
 cp "$TMP_DIR/fullStack/KNOWLEDGE.md" "$PROJECT_DIR/KNOWLEDGE.md"
 cp "$TMP_DIR/fullStack/CLAUDE.md"    "$PROJECT_DIR/CLAUDE.md"
 cp "$TMP_DIR/fullStack/.mcp.json"    "$PROJECT_DIR/.mcp.json"
+cp -r "$TMP_DIR/fullStack/skills"    "$PROJECT_DIR/skills"
 cp -r "$TMP_DIR/fullStack/.claude"   "$PROJECT_DIR/.claude"
 
 rm -rf "$TMP_DIR"
@@ -90,7 +93,7 @@ rm -rf "$TMP_DIR"
 Then commit:
 
 ```bash
-git add AGENTS.md KNOWLEDGE.md CLAUDE.md .mcp.json .claude/
+git add AGENTS.md KNOWLEDGE.md CLAUDE.md .mcp.json skills/ .claude/
 git commit -m "chore: adopt Full Stack HQ agent rules"
 ```
 
@@ -120,12 +123,16 @@ For agents other than Claude Code (Codex, OpenCode, Hermes), see [`KNOWLEDGE.md`
 
 ## Customizing
 
-- **Different stack?** Edit `AGENTS.md` §3 (Tech Stack) and §4 (Code Style), then refresh `KNOWLEDGE.md` with the new components' official AI entry points.
+- **Different stack?** Edit `AGENTS.md` §3 (Tech Stack) and §4 (Code Style), then refresh `KNOWLEDGE.md` with the new components' official AI entry points and replace/remove affected files in `skills/`.
 - **Want more or fewer subagents?** Add/remove files in `.claude/agents/`. The `AGENTS.md` §2 table should reflect what exists.
 - **Want more slash commands?** Add files in `.claude/commands/`. Update `AGENTS.md` §9.
+- **Need a new operational skill?** Add a file to `skills/` with the YAML frontmatter (`name`, `description`) and list it in `AGENTS.md` §13.
 - **New official MCP / Skill / Subagent appears upstream?** Add it to `KNOWLEDGE.md` and bump the "Last verified" date.
 
-Keep one source of truth: `AGENTS.md` for rules, `KNOWLEDGE.md` for external AI integrations.
+Sources of truth:
+- `AGENTS.md` — rules
+- `KNOWLEDGE.md` — external AI integrations
+- `skills/` — operational know-how (tools / libraries / languages)
 
 ---
 

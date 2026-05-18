@@ -415,3 +415,20 @@ For every multi-step task, maintain a todo list:
 | Deploy | ❌ Never autonomously |
 | Modify CI/CD | ❌ Never autonomously |
 | Access .env files | ❌ Read-only, never modify |
+
+---
+
+## 13. Operational Skills
+
+Concrete, copy-paste-ready operational knowledge for each major tool/library lives in [`skills/`](./skills/). **Read the relevant file before starting work in that domain** — these are the agreed baseline so different agents (and different model tiers) produce consistent output.
+
+| Skill | When to consult |
+|---|---|
+| [`skills/typescript-patterns.md`](./skills/typescript-patterns.md) | Writing or reviewing any TypeScript — generics, utility types, type guards, discriminated unions |
+| [`skills/tailwind-patterns.md`](./skills/tailwind-patterns.md) | Styling Svelte/Astro components — variant composition, design tokens, responsive + dark mode |
+| [`skills/nestjs-patterns.md`](./skills/nestjs-patterns.md) | Building NestJS modules — DTOs, services, controllers, guards, decorators |
+| [`skills/prisma-workflow.md`](./skills/prisma-workflow.md) | Prisma schemas, migrations, queries — includes SQLite portability rules |
+| [`skills/git-workflow.md`](./skills/git-workflow.md) | Git operations — branch naming, commit/PR commands, conflict resolution |
+| [`skills/docker-patterns.md`](./skills/docker-patterns.md) | Containerizing the stack — multi-stage Dockerfiles, docker-compose, Caddy reverse proxy |
+
+For Svelte and Astro specifically, prefer the **official MCP servers** wired up in `.mcp.json` (see [`KNOWLEDGE.md`](./KNOWLEDGE.md)) — they provide live docs and best-practice prompts.

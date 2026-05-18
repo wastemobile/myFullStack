@@ -98,11 +98,13 @@ For other agents, point their MCP config at the same URL with HTTP transport:
 - **Entry**: No official MCP / llms.txt as of 2026-05.
 - **Status**: actively requested — see [tailwindlabs/tailwindcss#18256](https://github.com/tailwindlabs/tailwindcss/discussions/18256) and [#14677](https://github.com/tailwindlabs/tailwindcss/discussions/14677).
 - **Workaround**: rely on the model's training + Tailwind's normal docs; avoid third-party MCP servers unless you've reviewed the source.
+- **In-repo baseline**: [`skills/tailwind-patterns.md`](./skills/tailwind-patterns.md) — Svelte 5 component variant patterns, v4 `@theme` tokens, dark mode, common recipes.
 
 ### TypeScript 5+
 
 - **Entry**: No official llms.txt or MCP from Microsoft for the TypeScript language itself.
 - **Workaround**: TypeScript is well-represented in model training; for niche features, consult <https://www.typescriptlang.org/docs/>.
+- **In-repo baseline**: [`skills/typescript-patterns.md`](./skills/typescript-patterns.md) — generics, utility types, discriminated unions, type guards.
 
 ---
 
@@ -113,6 +115,7 @@ For other agents, point their MCP config at the same URL with HTTP transport:
 - **Entry**: No official AI integration as of 2026-05.
 - **Status**: llms.txt proposal open at [nestjs/docs.nestjs.com#3282](https://github.com/nestjs/docs.nestjs.com/issues/3282).
 - **Related** (for *building* MCP servers inside NestJS apps, not consuming docs): [`@rekog/mcp-nest`](https://github.com/rekog-labs/MCP-Nest) — community, but the de-facto choice.
+- **In-repo baseline**: [`skills/nestjs-patterns.md`](./skills/nestjs-patterns.md) — module structure, DTOs + validation, services, controllers, guards, custom decorators.
 
 ### Node.js 24+
 
@@ -143,6 +146,7 @@ For other agents, point their MCP config at the same URL with HTTP transport:
 - **llms.txt**: <https://www.prisma.io/docs/llms.txt>
 - **Offers**: official MCP server. Can provision Prisma Postgres instances, run migrations, execute SQL, manage backups via natural language. Works with Claude, Codex, Cursor, Warp, ChatGPT.
 - **Caveat**: most powerful when using Prisma Postgres; local SQLite workflows mostly use the standard `prisma` CLI.
+- **In-repo baseline**: [`skills/prisma-workflow.md`](./skills/prisma-workflow.md) — engine-portable schema, migration commands, query/transaction patterns, SQLite-specific caveats (e.g. `skipDuplicates` unsupported, WAL mode).
 
 ### SQLite 3
 
@@ -189,6 +193,7 @@ For other agents, point their MCP config at the same URL with HTTP transport:
 - **Get started**: <https://docs.docker.com/ai/mcp-catalog-and-toolkit/get-started/>
 - **Offers**: Docker MCP Toolkit + Catalog — curated, signed MCP server images you can spin up via Docker Desktop, plus an MCP Gateway for orchestrating servers.
 - **Use case**: running MCP servers safely (sandboxed in containers) and exposing them to multiple agents through one gateway.
+- **In-repo baseline**: [`skills/docker-patterns.md`](./skills/docker-patterns.md) — multi-stage Dockerfiles for Astro + NestJS, docker-compose for SQLite/Postgres + Redis, Caddy 2 reverse proxy with automatic HTTPS.
 
 ### Caddy 2
 
