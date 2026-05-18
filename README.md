@@ -121,6 +121,30 @@ For agents other than Claude Code (Codex, OpenCode, Hermes), see [`KNOWLEDGE.md`
 
 ---
 
+## Personal Local Shortcut (author's setup, not shipped)
+
+The author keeps a `/use-mystack` slash command that wraps `rsync` to drop this repo's rules into any new project directory. **Not part of this repo** — the script and templates live in `$HOME`. To replicate:
+
+```bash
+# 1. Templates dir (clean copy of this repo)
+mkdir -p ~/.claude/templates/fullStack
+rsync -a --delete \
+  --exclude='README.md' --exclude='.git/' --exclude='.claude/settings.local.json' \
+  ~/projects/fullStack/ ~/.claude/templates/fullStack/
+
+# 2. ~/.local/bin/use-mystack — rsyncs templates into $PWD,
+#    skip-existing by default; supports --force / --dry-run / --only=...
+
+# 3. Thin wrappers per agent, each just calling `use-mystack`:
+#    Claude Code → ~/.claude/commands/use-mystack.md
+#    Codex CLI   → ~/.codex/prompts/use-mystack.md
+#    OpenCode    → ~/.config/opencode/command/use-mystack.md
+```
+
+**Re-sync after every `git pull` of this repo** — re-run step 1's `rsync`. The `--delete` flag is mandatory: without it, files removed from the repo would linger in the local templates and keep getting installed into new projects. The shell script itself rarely changes; redeploy only when its behavior is intentionally updated.
+
+---
+
 ## Quickstart: Starting a New Project
 
 After bootstrap above, the config files are present but **nothing is scaffolded yet**. To kick off:
