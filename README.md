@@ -112,7 +112,7 @@ For Claude Code, also check the MCP server loaded:
 /mcp
 ```
 
-You should see `svelte` connected to `https://mcp.svelte.dev/mcp`. Approve the prompt to trust the project-scoped server on first run.
+You should see `svelte` and `astro-docs` connected. Approve the prompt to trust the project-scoped servers on first run.
 
 For agents other than Claude Code (Codex, OpenCode, Hermes), see [`KNOWLEDGE.md`](./KNOWLEDGE.md#equivalent-for-other-agents) for the equivalent MCP install command in their config format.
 

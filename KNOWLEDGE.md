@@ -71,12 +71,27 @@ For the local stdio variant, swap the URL for a command spawning `npx -y @svelte
 
 - **Entry**: <https://docs.astro.build/en/guides/build-with-ai/>
 - **MCP server**: `https://mcp.docs.astro.build/mcp`
-- **Install (Claude Code)**:
-  ```
-  claude mcp add --transport http astro-docs https://mcp.docs.astro.build/mcp
-  ```
 - **Offers**: hosted MCP server (kapa.ai-backed) for real-time doc access.
 - **Note**: Astro removed its `llms.txt` in early 2026 — MCP is the supported path now.
+
+#### Pre-configured in this repo
+
+`.mcp.json` includes `astro-docs` alongside `svelte`. Claude Code auto-loads both; approve on first run.
+
+#### Install options (if you need to configure manually)
+
+```bash
+# Claude Code
+claude mcp add --transport http astro-docs https://mcp.docs.astro.build/mcp
+```
+
+For other agents, point their MCP config at the same URL with HTTP transport:
+
+| Agent | Config snippet |
+|---|---|
+| OpenAI Codex CLI | `{ "astro-docs": { "url": "https://mcp.docs.astro.build/mcp" } }` |
+| OpenCode (sst) | `mcp.servers.astro-docs` with `type: "http"`, same URL |
+| Hermes Agent | Same pattern — HTTP transport, same URL |
 
 ### Tailwind CSS v4
 
