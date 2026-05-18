@@ -19,6 +19,7 @@ Everything in the project, **except**:
 - `.DS_Store`
 - `.claude/commands/`, `.claude/hooks/`
 - `.claude/settings.json`, `.claude/settings.local.json`
+- `bootstrap/`, `bootstrap.sh` (these are for new-machine setup, not for installation into target projects)
 
 The mirror is destructive on the destination side (`rsync --delete`): files removed from the project are also removed from the template.
 

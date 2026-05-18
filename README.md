@@ -118,33 +118,38 @@ For agents other than Claude Code (Codex, OpenCode, Hermes), see [`KNOWLEDGE.md`
 
 ---
 
-## Personal Local Shortcut (author's setup, not shipped)
+## On a New Machine — `/use-mystack` Bootstrap
 
-The author keeps a `/use-mystack` Claude Code skill that installs this repo's contents into any project. **Not part of this repo** — the skill and the template both live in `$HOME`. To replicate:
+One command sets everything up:
 
 ```bash
-# 1. Template directory (clean copy of this repo, no .git / README / local state)
-mkdir -p ~/.claude/templates/fullStack
-rsync -a --delete \
-  --exclude='README.md' --exclude='.git/' --exclude='.claude/settings.local.json' \
-  ~/projects/myFullStack/ ~/.claude/templates/fullStack/
-
-# 2. Skill at ~/.claude/commands/use-mystack.md that orchestrates the install.
-#    All logic lives in the skill — no shell wrapper. It reads the template,
-#    detects existing files in $PWD, and either copies fresh or smart-merges:
-#      - AGENTS.md (existing) → appends a delimited stack-preferences block
-#      - CLAUDE.md (existing) → ensures @AGENTS.md is referenced
-#      - skills/, agents/, .mcp.json → rsync --ignore-existing
+curl -fsSL https://raw.githubusercontent.com/wastemobile/myFullStack/main/bootstrap.sh | bash
 ```
 
-Run `/use-mystack` in any project — empty or existing. The append uses a
-`<!-- BEGIN: full-stack-hq stack preferences -->` marker so re-running is a
-no-op (idempotent). Pass `--refresh` to update the marked section, `--dry-run`
-to preview.
+It does three things:
 
-**Re-sync after `git pull` of this repo** — re-run step 1's `rsync`. The
-`--delete` flag is mandatory: without it, files removed upstream would linger
-in the local template and keep getting installed into new projects.
+1. `git clone` this repo into `~/projects/myFullStack` (or `git pull` if already present)
+2. `rsync` the repo into `~/.claude/templates/fullStack/` — the install source
+3. Copy `bootstrap/use-mystack.md` into `~/.claude/commands/use-mystack.md` — the skill
+
+After bootstrap, restart Claude Code (or `/reload-plugins`), then in any project run:
+
+```
+/use-mystack
+```
+
+The skill:
+- **Checks GitHub for updates** before installing (Step 0 preflight). Offers to `git pull` and re-sync the template if the local repo is behind. Offers to refresh the skill itself if it has diverged.
+- **Smart-merges into existing projects**: empty dirs get a fresh copy; existing projects get the preferences appended inside a `<!-- BEGIN: full-stack-hq -->` marker block (idempotent — re-running is a no-op).
+- **Detects drift**: the marker embeds the commit SHA at install time. Next run shows `N commits behind` and suggests `/use-mystack --refresh`.
+
+Flags: `--refresh` (rewrite the marker block), `--dry-run` (preview), `--skip-update` (use cached template, no GitHub check).
+
+### Maintaining the local mirror
+
+While editing this repo locally, the `template-mirror` PostToolUse hook (defined in `.claude/hooks/template-mirror.sh`) auto-syncs any change to `AGENTS.md`, `KNOWLEDGE.md`, `CLAUDE.md`, `.mcp.json`, `.gitignore`, `skills/**`, `.claude/agents/**` into `~/.claude/templates/fullStack/`. It also mirrors `bootstrap/use-mystack.md` → `~/.claude/commands/use-mystack.md` so the skill twin stays in lock-step.
+
+For batched changes or hook-disabled scenarios, run `/sync-template` for a dry-run-and-confirm sync.
 
 ---
 
