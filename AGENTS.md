@@ -7,6 +7,29 @@
 
 ---
 
+## 0. Session Start Protocol
+
+**Before responding to the user's first substantive message in any session, output a Session Start Check.** This is not optional — it is the first thing the user sees from you.
+
+Format:
+
+```
+[Session Start Check]
+- Stack baseline: <one-line summary from §3 — Astro 5 + Svelte 5 + NestJS + Prisma/SQLite-or-PG + Caddy>
+- Relevant skills/: <comma-separated list from skills/ matching the user's request, or "none" if a pure question>
+- MCP loaded: <names from .mcp.json — e.g. svelte, astro-docs — or "none configured">
+- Phase: discovery | implementation | review
+```
+
+After the check:
+- If the user's request implies file creation or > 30-line edits, **stop and ask for `PLAN APPROVED`**. Do not write code yet.
+- If it's a pure question / read-only inspection / micro-edit (single file ≤ 30 lines), proceed normally.
+- If the user's described stack differs from the baseline (e.g. "I want to use Next.js"), surface the conflict and ask before deviating — do not silently switch.
+
+**Skip the check only if:** the very first user message is a trivial follow-up that obviously continues a prior conversation (e.g. "thanks", "go ahead with step 2"). When in doubt, run the check.
+
+---
+
 ## 1. Core Principles
 
 ### Permission-First Workflow
@@ -31,6 +54,18 @@ DO IT
 
 Any variation, implication, or partial approval = **NOT approved**.
 When in doubt: *"Please confirm with PLAN APPROVED to proceed."*
+
+### Plan-Gate Rule
+
+Any task that **creates a new file** or **modifies more than 30 lines in a single existing file** requires an approved `/plan` (or equivalent plan-and-approval exchange) **in the same session** before `/create` or any write tool runs.
+
+**Bypass exception (micro-edit):** a single-file edit of ≤ 30 lines may proceed directly with `IMPLEMENTATION APPROVED` — no separate `/plan` needed. Multi-file changes never qualify for the bypass, regardless of total line count.
+
+If the user types `/create` (or describes implementation work) without a prior `/plan` in this session and the bypass does not apply:
+- Refuse to write
+- Reply: *"No approved plan in this session. Please run `/plan` first, or confirm this is a single-file ≤ 30-line edit eligible for `IMPLEMENTATION APPROVED`."*
+
+This rule exists to catch the failure mode where the agent jumps from a one-line user request straight into multi-file scaffolding without surfacing assumptions.
 
 ### Thinking-First Engineering
 
@@ -359,6 +394,8 @@ These slash commands are defined in `.claude/commands/` and are Claude Code-spec
 | `/create` | Implementing approved plan |
 | `/debug` | Stuck on a bug |
 | `/test` | Writing or fixing tests |
+
+**`/plan` → `/create` is enforced** by the Plan-Gate Rule in §1. `/create` will refuse to run unless either (a) a prior `/plan` in this session was approved, or (b) the change qualifies as a single-file ≤ 30-line micro-edit.
 
 ---
 

@@ -121,6 +121,32 @@ For agents other than Claude Code (Codex, OpenCode, Hermes), see [`KNOWLEDGE.md`
 
 ---
 
+## Quickstart: Starting a New Project
+
+After bootstrap above, the config files are present but **nothing is scaffolded yet**. To kick off:
+
+1. Open the directory in your agent (`claude`, `codex`, `opencode`, ...). It will auto-load `AGENTS.md` (and `CLAUDE.md → @AGENTS.md` for Claude Code). For Claude Code, approve the project-scoped MCP prompt on first run.
+
+2. **Paste this as your first message** (agent-agnostic):
+
+   > I want to build **[一句話描述, e.g. a personal expense tracker for myself, single user, local only]**. Please follow this repo's stack baseline.
+   >
+   > First, output your Session Start Check per AGENTS.md §0. Then propose a scaffolding plan: directory structure, init commands (`astro create`, `nest new`, `prisma init`, etc.), and any deviations from the baseline you'd recommend for this use case (e.g. SQLite vs PostgreSQL based on AGENTS.md §3 criteria). Wait for `PLAN APPROVED` before running anything.
+
+3. The agent should respond with the `[Session Start Check]` block, then a scaffolding plan. Review, adjust, and reply `PLAN APPROVED` when satisfied — only then does it run init commands.
+
+4. From this point on, every feature follows the same loop: describe → `[Session Start Check]` (if it's a fresh session) → `/plan` → `PLAN APPROVED` → `/create` → review. Single-file edits ≤ 30 lines can skip `/plan` and use `IMPLEMENTATION APPROVED` directly (see AGENTS.md §1 Plan-Gate Rule).
+
+### Why this works
+
+- **AGENTS.md §0** forces the agent to declare its understanding before acting — catches stack-mismatch and skipped-skill problems early.
+- **AGENTS.md §1 Plan-Gate Rule** prevents the agent from leaping into multi-file scaffolding off a one-line request.
+- **`.mcp.json`** auto-connects Svelte/Astro live docs so the agent isn't guessing from training memory.
+
+If the agent skips the Session Start Check or starts writing without `PLAN APPROVED`, that's a regression — re-prompt with: *"Please follow AGENTS.md §0 and §1 strictly."*
+
+---
+
 ## Customizing
 
 - **Different stack?** Edit `AGENTS.md` §3 (Tech Stack) and §4 (Code Style), then refresh `KNOWLEDGE.md` with the new components' official AI entry points and replace/remove affected files in `skills/`.

@@ -6,6 +6,17 @@ command: /create
 
 # Create Workflow
 
+## Precondition (Plan-Gate)
+
+Before doing anything else, check whether the **Plan-Gate Rule** (AGENTS.md §1) is satisfied for this request:
+
+- **Does this task create a new file OR modify more than 30 lines in a single existing file?**
+  - **Yes** → there MUST be an approved `/plan` in this same session. If there isn't, **refuse**:
+    > *"No approved plan in this session. Please run `/plan` first, or confirm this is a single-file ≤ 30-line edit eligible for `IMPLEMENTATION APPROVED`."*
+  - **No** (single-file edit ≤ 30 lines) → bypass allowed; proceed with `IMPLEMENTATION APPROVED`.
+
+Only after this check passes do you continue with the steps below.
+
 ## Purpose
 
 Systematically create new features, components, or modules following best practices.
