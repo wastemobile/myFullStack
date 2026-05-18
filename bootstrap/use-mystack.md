@@ -55,26 +55,29 @@ If `$REPO_DIR/.git` does not exist, print:
 ```
 Then skip to Step 1.
 
-### 0.2 — fetch + compare
+### 0.2 — fetch + compare versions
 
 ```bash
-git -C "$REPO_DIR" fetch --quiet origin main 2>/dev/null || OFFLINE=1
+git -C "$REPO_DIR" fetch --quiet --tags origin main 2>/dev/null || OFFLINE=1
 ```
 
 If `OFFLINE` → warn `⚠ git fetch failed (offline?). Using cached template.` and skip to Step 1.
 
-Otherwise:
+Otherwise compare semver tags:
 ```bash
-LOCAL=$(git -C "$REPO_DIR" rev-parse HEAD)
-REMOTE=$(git -C "$REPO_DIR" rev-parse origin/main)
-BEHIND=$(git -C "$REPO_DIR" rev-list --count HEAD..origin/main)
+LOCAL_VERSION=$(git -C "$REPO_DIR" describe --tags --abbrev=0 HEAD 2>/dev/null || echo "untagged")
+REMOTE_VERSION=$(git -C "$REPO_DIR" describe --tags --abbrev=0 origin/main 2>/dev/null || echo "untagged")
+COMMITS_BEHIND=$(git -C "$REPO_DIR" rev-list --count HEAD..origin/main)
 ```
 
-- If `LOCAL == REMOTE` → print `✓ Repo up to date.` Continue.
-- Otherwise show the user the new commits and ask:
+- If `LOCAL_VERSION == REMOTE_VERSION` **and** `COMMITS_BEHIND == 0` → print `✓ Repo up to date ($LOCAL_VERSION).` Continue.
+- Otherwise show the user the upgrade and ask:
 
 ```
-Local repo is $BEHIND commit(s) behind origin/main:
+Local:  $LOCAL_VERSION
+Latest: $REMOTE_VERSION  ($COMMITS_BEHIND commits ahead)
+
+Release notes: https://github.com/wastemobile/myFullStack/releases/tag/$REMOTE_VERSION
 
 <output of: git -C "$REPO_DIR" log --oneline HEAD..origin/main>
 
@@ -83,7 +86,7 @@ Pull and re-sync template? (PROCEED to pull, or "skip")
 
 On `PROCEED`:
 ```bash
-git -C "$REPO_DIR" pull --ff-only
+git -C "$REPO_DIR" pull --ff-only --tags
 rsync -a --delete \
   --exclude='/.git/' --exclude='/README.md' --exclude='/.DS_Store' \
   --exclude='/.claude/commands/' --exclude='/.claude/hooks/' \
@@ -117,7 +120,7 @@ SRC="$TEMPLATE_DIR"
 DST="$PWD"
 test -d "$SRC" || { echo "✗ template missing — run bootstrap.sh"; exit 1; }
 
-COMMIT_SHA=$(git -C "$REPO_DIR" rev-parse --short HEAD 2>/dev/null || echo "unknown")
+VERSION=$(git -C "$REPO_DIR" describe --tags --abbrev=0 HEAD 2>/dev/null || echo "untagged")
 INSTALL_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 ```
 
@@ -151,10 +154,10 @@ rsync -a --ignore-existing "$SRC/skills/" "$DST/skills/"
 
 ## Step 5 — AGENTS.md (smart merge)
 
-Marker format (commit metadata embedded for drift detection):
+Marker format (semver version embedded for drift detection):
 
 ```
-<!-- BEGIN: full-stack-hq stack preferences (managed by /use-mystack; commit COMMIT_SHA @ INSTALL_DATE) -->
+<!-- BEGIN: full-stack-hq stack preferences (managed by /use-mystack; version VERSION @ INSTALL_DATE) -->
 
 {template AGENTS.md contents}
 
@@ -167,26 +170,29 @@ Decision tree:
 → `cp "$SRC/AGENTS.md" "$DST/AGENTS.md"`. Record `created: AGENTS.md`.
 
 **2. Exists, no BEGIN marker.**
-→ Append the delimited block to the end of the file, using the BEGIN line with current `$COMMIT_SHA` and `$INSTALL_DATE`. Record `appended: AGENTS.md`.
+→ Append the delimited block to the end of the file, using the BEGIN line with current `$VERSION` and `$INSTALL_DATE`. Record `appended: AGENTS.md ($VERSION)`.
 
 **3. Exists, has BEGIN marker, no `--refresh`.**
-Parse installed SHA from the existing marker:
+Parse installed version from the existing marker:
 ```bash
-INSTALLED_SHA=$(grep -m1 'BEGIN: full-stack-hq' "$DST/AGENTS.md" | sed -E 's/.*commit ([a-f0-9]+) @.*/\1/')
+INSTALLED_VERSION=$(grep -m1 'BEGIN: full-stack-hq' "$DST/AGENTS.md" | sed -E 's/.*version (v?[0-9.]+|untagged).*/\1/')
 ```
-- If `INSTALLED_SHA == $COMMIT_SHA` → record `up to date: AGENTS.md`.
+- If `INSTALLED_VERSION == $VERSION` → record `up to date: AGENTS.md ($VERSION)`.
 - Else compute drift:
   ```bash
-  DRIFT=$(git -C "$REPO_DIR" rev-list --count "$INSTALLED_SHA..HEAD" 2>/dev/null || echo "?")
+  COMMITS_BEHIND=$(git -C "$REPO_DIR" rev-list --count "$INSTALLED_VERSION..HEAD" 2>/dev/null || echo "?")
   ```
   Record:
   ```
-  ⚠ AGENTS.md drift: installed at $INSTALLED_SHA, template at $COMMIT_SHA ($DRIFT commits behind).
+  ⚠ AGENTS.md drift: installed $INSTALLED_VERSION, template $VERSION ($COMMITS_BEHIND commits behind).
+    Release notes: https://github.com/wastemobile/myFullStack/releases/tag/$VERSION
     Run /use-mystack --refresh to update.
   ```
 
 **4. Exists, has BEGIN marker, with `--refresh`.**
-Replace the entire region from `<!-- BEGIN:` through `<!-- END:` (inclusive) with a freshly-stamped block using current `$COMMIT_SHA` and `$INSTALL_DATE`. Record `refreshed: AGENTS.md ($INSTALLED_SHA → $COMMIT_SHA)`.
+Replace the entire region from `<!-- BEGIN:` through `<!-- END:` (inclusive) with a freshly-stamped block using current `$VERSION` and `$INSTALL_DATE`. Record `refreshed: AGENTS.md ($INSTALLED_VERSION → $VERSION)`.
+
+**Legacy markers (pre-v1.0.0):** earlier installs may have a `commit <sha> @ ...` marker instead of `version v... @ ...`. The parser above will return the SHA string in `$INSTALLED_VERSION`; the comparison will fail; the drift message will display the SHA. Run `/use-mystack --refresh` to migrate the marker to the new version format.
 
 ## Step 6 — CLAUDE.md (`@AGENTS.md` reference)
 
@@ -202,10 +208,10 @@ grep -qF '@AGENTS.md' "$DST/CLAUDE.md"
 ## Step 7 — report
 
 ```
-/use-mystack — install complete
+/use-mystack — install complete (version $VERSION)
 
 Preflight:
-  Repo:   <up to date | pulled $BEHIND commits | offline | repo missing>
+  Repo:   <up to date $LOCAL_VERSION | pulled $LOCAL_VERSION → $REMOTE_VERSION | offline | repo missing>
   Skill:  <up to date | refreshed | skipped>
 
 Install:
@@ -213,11 +219,11 @@ Install:
   Appended:   <files>
   Refreshed:  <files>
   Skipped:    <files>
-  Drift:      <files needing --refresh>
+  Drift:      <files needing --refresh — show installed vs current version>
 
 Next:
   - Review AGENTS.md to confirm stack preferences fit this project.
-  - If this is a new repo: git init && git add -A && git commit -m "chore: install full-stack-hq preferences"
+  - If this is a new repo: git init && git add -A && git commit -m "chore: install full-stack-hq preferences ($VERSION)"
 ```
 
 If `--dry-run`, prefix heading with `[DRY RUN] ` and clarify nothing was written.
@@ -225,11 +231,11 @@ If `--dry-run`, prefix heading with `[DRY RUN] ` and clarify nothing was written
 ## Idempotency contract
 
 Running `/use-mystack` twice produces no further changes the second time:
-- Step 0 reports `up to date`.
-- Step 5 case 3 detects matching SHA → `up to date: AGENTS.md`.
+- Step 0 reports `up to date` (version match).
+- Step 5 case 3 detects matching version → `up to date: AGENTS.md`.
 - All other steps already skip-if-existing.
 
-The BEGIN/END markers + embedded commit SHA are the idempotency contract. Don't hand-edit them.
+The BEGIN/END markers + embedded semver version are the idempotency contract. Don't hand-edit them.
 
 ## Permissions
 

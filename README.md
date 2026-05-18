@@ -1,5 +1,7 @@
 # Full Stack HQ
 
+*🌏 [繁體中文版 README_zh.md](./README_zh.md)*
+
 > Opinionated AI coding configuration for a TypeScript-first full-stack workflow.
 > One canonical rule set (`AGENTS.md`), readable by any modern coding agent.
 
@@ -64,33 +66,51 @@ Tool-specific entry points all resolve to the same content:
 
 **Workflows are not bundled.** Planning, debugging, testing, etc. come from each agent's own commands (e.g. Claude Code's built-in `/plan`) or from skills installed separately. This repo only describes *what* stack and conventions to use — not *how* to drive your workflow.
 
+### Dev-only files (this repo's own maintenance, not shipped to target projects)
+
+A few additional files live in the repo for maintaining the `/use-mystack` flow. They are **excluded** from any install (bootstrap.sh, the template-mirror hook, and `/sync-template` all skip them) — but you'll see them in a clone:
+
+| Path | Purpose |
+|---|---|
+| `bootstrap.sh` | One-line `curl \| bash` installer for the `/use-mystack` skill on a new machine |
+| `bootstrap/use-mystack.md` | Canonical copy of the `/use-mystack` skill (twin of `~/.claude/commands/use-mystack.md`) |
+| `.claude/commands/sync-template.md` | Manual project-scoped slash command for syncing this repo → local template cache |
+| `.claude/hooks/template-mirror.sh` | PostToolUse hook that auto-syncs source edits → local template cache and skill twin |
+| `.claude/settings.json` | Registers the PostToolUse hook |
+
 ---
 
-## Bootstrap Into a New Project
+## Install Into a Project — Manual Path
 
-There is **no install script**. Copy the files manually so you understand what lands where.
+> For **non-Claude-Code agents** (Codex, OpenCode, Hermes), or anyone who'd rather copy files explicitly.
+> Claude Code users have a faster path — see [On a New Machine](#on-a-new-machine--use-mystack-bootstrap) below.
+
+Copy the files manually so you understand what lands where:
 
 ```bash
 # From the project where you want these rules to apply:
 PROJECT_DIR="$(pwd)"
 TMP_DIR="$(mktemp -d)"
 
-git clone --depth 1 git@github.com:wastemobile/myFullStack.git "$TMP_DIR/fullStack"
+git clone --depth 1 https://github.com/wastemobile/myFullStack.git "$TMP_DIR/fullStack"
 
 cp "$TMP_DIR/fullStack/AGENTS.md"    "$PROJECT_DIR/AGENTS.md"
 cp "$TMP_DIR/fullStack/KNOWLEDGE.md" "$PROJECT_DIR/KNOWLEDGE.md"
 cp "$TMP_DIR/fullStack/CLAUDE.md"    "$PROJECT_DIR/CLAUDE.md"
 cp "$TMP_DIR/fullStack/.mcp.json"    "$PROJECT_DIR/.mcp.json"
-cp -r "$TMP_DIR/fullStack/skills"    "$PROJECT_DIR/skills"
-cp -r "$TMP_DIR/fullStack/.claude"   "$PROJECT_DIR/.claude"
+cp -r "$TMP_DIR/fullStack/skills"           "$PROJECT_DIR/skills"
+mkdir -p "$PROJECT_DIR/.claude"
+cp -r "$TMP_DIR/fullStack/.claude/agents"   "$PROJECT_DIR/.claude/agents"
 
 rm -rf "$TMP_DIR"
 ```
 
+> Only `.claude/agents/` is copied — `.claude/commands/`, `.claude/hooks/`, and `.claude/settings.json` are this repo's own dev-only files and must not ship into a target project.
+
 Then commit:
 
 ```bash
-git add AGENTS.md KNOWLEDGE.md CLAUDE.md .mcp.json skills/ .claude/
+git add AGENTS.md KNOWLEDGE.md CLAUDE.md .mcp.json skills/ .claude/agents/
 git commit -m "chore: adopt Full Stack HQ agent rules"
 ```
 
@@ -106,19 +126,21 @@ git commit -m "chore: adopt Full Stack HQ agent rules"
 
 Open a new agent session and ask it to **summarize the rules in three bullet points**. A correctly configured agent should mention permission-first workflow, the Astro/Svelte/SQLite stack, and approval keywords (`PLAN APPROVED`, `IMPLEMENTATION APPROVED`, `PROCEED`, `DO IT`).
 
-For Claude Code, also check the MCP server loaded:
+For Claude Code, also check the MCP servers loaded:
 
 ```
 /mcp
 ```
 
-You should see `svelte` and `astro-docs` connected. Approve the prompt to trust the project-scoped servers on first run.
+You should see `svelte`, `astro-docs`, and `context7` connected. Approve the prompt to trust the project-scoped servers on first run.
 
 For agents other than Claude Code (Codex, OpenCode, Hermes), see [`KNOWLEDGE.md`](./KNOWLEDGE.md#equivalent-for-other-agents) for the equivalent MCP install command in their config format.
 
 ---
 
 ## On a New Machine — `/use-mystack` Bootstrap
+
+> **Claude Code path (recommended).** One-time setup, then `/use-mystack` handles every future install with self-update + drift detection. If you're not using Claude Code, see [Install Into a Project — Manual Path](#install-into-a-project--manual-path) above.
 
 One command sets everything up:
 
@@ -141,9 +163,20 @@ After bootstrap, restart Claude Code (or `/reload-plugins`), then in any project
 The skill:
 - **Checks GitHub for updates** before installing (Step 0 preflight). Offers to `git pull` and re-sync the template if the local repo is behind. Offers to refresh the skill itself if it has diverged.
 - **Smart-merges into existing projects**: empty dirs get a fresh copy; existing projects get the preferences appended inside a `<!-- BEGIN: full-stack-hq -->` marker block (idempotent — re-running is a no-op).
-- **Detects drift**: the marker embeds the commit SHA at install time. Next run shows `N commits behind` and suggests `/use-mystack --refresh`.
+- **Detects drift via semver tags**: the marker embeds the version (e.g. `v1.0.0`) at install time. Next run shows `installed v1.0.0, template v1.2.0 (N commits behind)`, links to the GitHub Release notes, and suggests `/use-mystack --refresh`.
 
 Flags: `--refresh` (rewrite the marker block), `--dry-run` (preview), `--skip-update` (use cached template, no GitHub check).
+
+### Versioning
+
+This repo uses [SemVer](https://semver.org/) git tags + [GitHub Releases](https://github.com/wastemobile/myFullStack/releases). Convention for this preference repo:
+
+- **PATCH** (`v1.0.X`) — typos, doc-only changes, no behavior change
+- **MINOR** (`v1.X.0`) — new rule, new skill, new MCP recommendation (backward-compatible)
+- **MAJOR** (`vX.0.0`) — rule removal, section renumbering, or other changes that meaningfully change agent behavior
+
+Browse releases for human-readable changelogs:
+[github.com/wastemobile/myFullStack/releases](https://github.com/wastemobile/myFullStack/releases)
 
 ### Maintaining the local mirror
 

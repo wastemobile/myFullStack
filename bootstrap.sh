@@ -31,9 +31,12 @@ if [ ! -d "$REPO_DIR/.git" ]; then
   echo "→ cloning $REPO_URL"
   git clone "$REPO_URL" "$REPO_DIR"
 else
-  echo "→ repo already present, running git pull --ff-only"
-  git -C "$REPO_DIR" pull --ff-only
+  echo "→ repo already present, running git pull --ff-only --tags"
+  git -C "$REPO_DIR" pull --ff-only --tags
 fi
+
+VERSION=$(git -C "$REPO_DIR" describe --tags --abbrev=0 HEAD 2>/dev/null || echo "untagged")
+echo "  version:  $VERSION"
 
 # 2. Sync template (same excludes as template-mirror hook + /sync-template skill)
 echo "→ syncing template"
@@ -56,9 +59,11 @@ mkdir -p "$SKILL_DIR"
 cp "$REPO_DIR/bootstrap/use-mystack.md" "$SKILL_DIR/use-mystack.md"
 
 echo ""
-echo "✓ bootstrap complete."
+echo "✓ bootstrap complete (installed $VERSION)."
 echo ""
 echo "Next:"
 echo "  1. Restart Claude Code (or /reload-plugins)."
 echo "  2. cd into any project."
 echo "  3. Run /use-mystack — it will check for upstream updates and install."
+echo ""
+echo "Release notes: https://github.com/wastemobile/myFullStack/releases"
